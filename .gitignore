@@ -1,0 +1,53 @@
+# 构建输出
+build/
+cmake-build-*/
+*.exe
+*.ilk
+*.pdb
+*.dll
+*.lib
+*.so
+*.dylib
+
+# CMake文件
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+
+# IDE文件
+.vs/
+.vscode/
+.idea/
+
+# 操作系统
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# 临时文件
+*.tmp
+*.temp
+*~
+.DS_Store
+
+# Qt特定文件
+*.user
+*.user.*
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+*.qm
+
+# Debug/Release目录
+Debug/
+Release/
+debug/
+release/
+bin/
+dist/
+out/
