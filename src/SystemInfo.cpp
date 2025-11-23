@@ -323,7 +323,7 @@ Buffer::CPUInfo Buffer::GetCPUInfo() {
     info.name = "Unknown";
     info.usage = GetCPUUsage();
     info.coreCount = 0;
-    info.temperature = -1.0; // -1表示无法获取温度，暂不支持
+    info.temperature = -1.0; // 无法获取温度，暂不支持
     
     // 获取CPU核心数
     SYSTEM_INFO sysInfo;
@@ -450,6 +450,7 @@ std::vector<Buffer::GPUInfo> Buffer::GetGPUInfo() {
     }
     
     // 尝试使用WMI获取GPU信息
+    // 并不可行
     IWbemServices *pSvc = NULL;
     IWbemLocator *pLoc = NULL;
     HRESULT hres = InitializeWMI(&pLoc, &pSvc);
@@ -470,9 +471,9 @@ std::vector<Buffer::GPUInfo> Buffer::GetGPUInfo() {
                 hr = pclsObj->Get(L"AdapterRAM", 0, &vtProp, 0, 0);
                 if (SUCCEEDED(hr) && vtProp.vt == VT_I4) {
                     gpus[gpuIndex].totalMemory = (unsigned long long)vtProp.lVal;
-                    // 假设使用了一半显存，实际无法通过此方法获取精确使用量
+                    // 假设使用了91%显存，实际无法通过此方法获取精确使用量
                     gpus[gpuIndex].availableMemory = gpus[gpuIndex].totalMemory / 2;
-                    gpus[gpuIndex].memoryUsage = 50.0; // 假设50%使用率
+                    gpus[gpuIndex].memoryUsage = 91.0; // 假设91%使用率
                 }
                 
                 // 获取GPU名称
