@@ -40,11 +40,12 @@ bool RelaunchAsAdmin() {
 int main(int argc, char *argv[]) {
     // 检查是否以管理员权限运行
     if (!IsRunAsAdmin()) {
-        // 如果没有以管理员权限运行，询问用户是否需要提权
+        // 如果没有以管理员权限运行，询问用户是否需要提权，虽然这块暂时没有用
         int response = QMessageBox::question(nullptr, "权限不足",
                                              "内存清理功能需要管理员权限才能发挥最佳效果。\n"
                                              "是否以管理员权限重新运行程序？",
                                              QMessageBox::Yes | QMessageBox::No);
+        //调试信息已关闭，暂无控制台接口
         if (response == QMessageBox::Yes) {
             if (RelaunchAsAdmin()) {
                 return 0;  // 退出当前进程，启动新的管理员进程
@@ -73,34 +74,62 @@ int main(int argc, char *argv[]) {
 
     std::cout << "应用程序初始化开始..." << std::endl;
 
-    // 检查系统托盘是否可用
-    if (!QSystemTrayIcon::isSystemTrayAvailable()) {
-        // 如果系统托盘不可用，仍然继续运行程序，不询问用户
-        std::cout << "系统托盘不可用，程序将在无托盘模式下运行..." << std::endl;
-        // 注意：即使托盘不可用，程序也应该继续运行
-    } else {
-        std::cout << "系统托盘可用" << std::endl;
+    // 检查系统托盘是否可用
+
+    if (!QSystemTrayIcon::isSystemTrayAvailable()) {
+
+        // 如果系统托盘不可用，仍然继续运行程序，不询问用户
+
+        std::cout << "系统托盘不可用，程序将在无托盘模式下运行..." << std::endl;
+
+        // 注意：即使托盘不可用，程序也应该继续运行
+
+    } else {
+
+        std::cout << "系统托盘可用" << std::endl;
+
     }
 
-    std::cout << "创建主窗口..." << std::endl;
-
-    try {
-        MainWindow window;
-        std::cout << "主窗口创建成功" << std::endl;
-
-        // 显示主窗口并确保它保持在前台
-        window.show();
-        window.raise();
-        window.activateWindow();
-        std::cout << "主窗口已显示，进入事件循环..." << std::endl;
-
-        // 进入Qt事件循环
-        return app.exec();
-    }
-    catch (const std::exception& e) {
-        std::cout << "程序启动异常: " << e.what() << std::endl;
-        QMessageBox::critical(nullptr, "启动错误",
-                              QString("程序启动失败: %1").arg(e.what()));
-        return 1;
+    std::cout << "创建主窗口..." << std::endl;
+
+
+
+    try {
+
+        MainWindow window;
+
+        std::cout << "主窗口创建成功" << std::endl;
+
+
+
+        // 显示主窗口并确保它保持在前台
+
+        window.show();
+
+        window.raise();
+
+        window.activateWindow();
+
+        std::cout << "主窗口已显示，进入事件循环..." << std::endl;
+
+
+
+        // 进入Qt事件循环
+
+        return app.exec();
+
     }
+
+    catch (const std::exception& e) {
+
+        std::cout << "程序启动异常: " << e.what() << std::endl;
+
+        QMessageBox::critical(nullptr, "启动错误",
+
+                              QString("程序启动失败: %1").arg(e.what()));
+
+        return 1;
+
+    }
+
 }
