@@ -39,7 +39,7 @@ Buffer是一个基于Qt6开发的C++桌面应用程序，主要功能是监控�
 ![运行前截图](images/Pre.png)
 _运行前_
 
-![运行后截图](images/later.png)
+![运行后截图](images/Later.png)
 _运行后_
 
 ## 关于Qt
