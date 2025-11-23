@@ -36,10 +36,10 @@ Buffer是一个基于Qt6开发的C++桌面应用程序，主要功能是监控�
 运行Buffer.exe，应用程序将在系统托盘中运行。双击托盘图标可显示主窗口，右键托盘图标可访问菜单。
 
 ## 效果参考图
-![运行前截图](images/Pre.png)
+![运行前截图](https://cdn.jsdelivr.net/gh/Alterego-42/image-hosting@main/Buffer/Pre.png)
 _运行前_
 
-![运行后截图](images/Later.png)
+![运行后截图](https://cdn.jsdelivr.net/gh/Alterego-42/image-hosting@main/Buffer/Later.png)
 _运行后_
 
 ## 关于Qt
