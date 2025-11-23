@@ -10,6 +10,7 @@ Buffer是一个基于Qt6开发的C++桌面应用程序，主要功能是监控�
 - 支持一键清理内存
 - 显示占用内存最多的应用程序列表
 - 根据内存使用率自动清理
+- 集成了windows清理内存的主要方法，不使用内存压缩方案
 
 ## 技术栈
 
@@ -20,16 +21,15 @@ Buffer是一个基于Qt6开发的C++桌面应用程序，主要功能是监控�
 
 ## 编译方法
 
-1. 确保已安装Qt6、CMake和Visual Studio
-2. 确保OpenHardwareMonitor项目已编译生成OpenHardwareMonitorLib.dll
-3. 在项目根目录执行：
+1. 确保已安装Qt6、CMake
+2. 在项目根目录执行：
    ```bash
    mkdir build
    cd build
    cmake ..
    cmake --build .
    ```
-4. 运行生成的可执行文件
+3. 运行生成的可执行文件
 
 ## 使用方法
 
