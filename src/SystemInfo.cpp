@@ -323,7 +323,7 @@ Buffer::CPUInfo Buffer::GetCPUInfo() {
     info.name = "Unknown";
     info.usage = GetCPUUsage();
     info.coreCount = 0;
-    info.temperature = -1.0; // -1表示无法获取温度
+    info.temperature = -1.0; // -1表示无法获取温度，暂不支持
     
     // 获取CPU核心数
     SYSTEM_INFO sysInfo;
@@ -352,7 +352,7 @@ Buffer::CPUInfo Buffer::GetCPUInfo() {
     }
     
     // 尝试获取CPU温度 (使用WMI查询)
-    // 注意：在某些系统上这可能不可用
+    // 大概率不可用，接口已挂起
     IWbemServices *pSvc = NULL;
     IWbemLocator *pLoc = NULL;
     HRESULT hres = InitializeWMI(&pLoc, &pSvc);
@@ -499,7 +499,7 @@ std::vector<Buffer::GPUInfo> Buffer::GetGPUInfo() {
     return gpus;
 }
 
-// 实现 HasCUDA 函数
+// 实现 HasCUDA 函数，接口已挂起
 bool Buffer::HasCUDA() {
     // 尝试加载CUDA DLL以检测CUDA是否可用
     HMODULE hCuda = LoadLibrary(L"nvcuda.dll");
