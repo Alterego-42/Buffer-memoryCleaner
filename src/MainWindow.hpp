@@ -2,28 +2,30 @@
 #ifndef MAINWINDOW_HPP
 #define MAINWINDOW_HPP
 
-#include <QMainWindow>
-#include <QSystemTrayIcon>
-#include <QMenu>
-#include <QAction>
-#include <QCloseEvent>
-#include <QChartView>
-#include <QChart>
-#include <QLineSeries>
-#include <QValueAxis>
-#include <QLabel>
-#include <QProgressBar>
-#include <QTimer>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QGroupBox>
-#include <QList>
+#include <QMainWindow>
+#include <QSystemTrayIcon>
+#include <QMenu>
+#include <QAction>
+#include <QCloseEvent>
+#include <QChartView>
+#include <QChart>
+#include <QLineSeries>
+#include <QValueAxis>
+#include <QLabel>
+#include <QProgressBar>
+#include <QTimer>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QGroupBox>
+#include <QList>
+#include <QSlider>
 
-QT_BEGIN_NAMESPACE
-class QChartView;
-class QChart;
-class QLineSeries;
-class QValueAxis;
+QT_BEGIN_NAMESPACE
+class QChartView;
+class QChart;
+class QLineSeries;
+class QValueAxis;
+class QSlider;
 QT_END_NAMESPACE
 
 namespace Buffer {
@@ -42,14 +44,16 @@ protected:
     void showEvent(QShowEvent *event) override;
     void hideEvent(QHideEvent *event) override;
 
-private slots:
-    void onTrayIconActivated(QSystemTrayIcon::ActivationReason reason);
-    void onShowWindow();
-    void onCleanNow();
-    void onExit();
-    void updateSystemInfo();
-    void updateChart();
-    void updateAppList();
+private slots:
+    void onTrayIconActivated(QSystemTrayIcon::ActivationReason reason);
+    void onShowWindow();
+    void onCleanNow();
+    void onExit();
+    void updateSystemInfo();
+    void updateChart();
+    void updateAppList();
+    void onThresholdChanged(int value);
+    void onFrequencyChanged(int value);
 
 private:  // 添加IsRunAsAdmin函数声明
     bool IsRunAsAdmin();
@@ -80,11 +84,23 @@ private:
     QVBoxLayout *appListLayout;
     QList<QLabel*> appLabels;
 
-    // 异步处理相关
-    QTimer *updateTimer;
-    QTimer *appUpdateTimer;
-    int timeCounter;
-    bool isMainWindowVisible;
+    // 异步处理相关
+    QTimer *updateTimer;
+    QTimer *appUpdateTimer;
+    int timeCounter;
+    bool isMainWindowVisible;
+
+    // 自动清理设置相关
+    QGroupBox *autoCleanGroup;
+    QLabel *thresholdLabel;
+    QSlider *thresholdSlider;
+    QLabel *frequencyLabel;
+    QSlider *frequencySlider;
+    QLabel *thresholdValueLabel;
+    QLabel *frequencyValueLabel;
+
+    // 自动清理频率控制
+    int cleanFrequencyCounter;
 };
 
 #endif // MAINWINDOW_HPP
