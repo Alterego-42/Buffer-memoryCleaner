@@ -38,14 +38,15 @@ bool RelaunchAsAdmin() {
 }
 
 int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);
+
     // 检查是否以管理员权限运行
     if (!IsRunAsAdmin()) {
-        // 如果没有以管理员权限运行，询问用户是否需要提权，虽然这块暂时没有用
+        // 如果没有以管理员权限运行，询问用户是否需要提权
         int response = QMessageBox::question(nullptr, "权限不足",
                                              "内存清理功能需要管理员权限才能发挥最佳效果。\n"
                                              "是否以管理员权限重新运行程序？",
                                              QMessageBox::Yes | QMessageBox::No);
-        //调试信息已关闭，暂无控制台接口
         if (response == QMessageBox::Yes) {
             if (RelaunchAsAdmin()) {
                 return 0;  // 退出当前进程，启动新的管理员进程
@@ -64,8 +65,6 @@ int main(int argc, char *argv[]) {
 
     // 设置控制台编码为UTF-8
     SetConsoleOutputCP(65001);
-
-    QApplication app(argc, argv);
 
     app.setApplicationName("Buffer Memory Cleaner");
     app.setApplicationVersion("1.0");
