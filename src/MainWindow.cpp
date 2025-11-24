@@ -31,7 +31,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), timeCounter(0) {
     // 设置控制台编码为UTF-8
     SetConsoleOutputCP(65001);
 
-    // 关键修复：设置窗口标志，防止隐藏窗口时程序退出[6](@ref)
+    // 防止隐藏窗口时程序退出[6](@ref)
     setWindowFlags(Qt::Tool);
 
     // 初始化成员变量
@@ -51,6 +51,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), timeCounter(0) {
     updateTimer = nullptr;
     appUpdateTimer = nullptr;  // 应用列表更新定时器
     isMainWindowVisible = true;  // 初始设为可见
+    cleanFrequencyCounter = 0;  // 初始化清理频率计数器
 
     setupUI();
     createTrayIcon();
@@ -65,6 +66,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), timeCounter(0) {
     appUpdateTimer = new QTimer(this);
     connect(appUpdateTimer, &QTimer::timeout, this, &MainWindow::updateAppList);
     appUpdateTimer->start(APP_UPDATE_INTERVAL_MS);  // 每3秒更新一次应用列表
+
+    // 连接自动清理设置的信号
+    connect(thresholdSlider, &QSlider::valueChanged, this, &MainWindow::onThresholdChanged);
+    connect(frequencySlider, &QSlider::valueChanged, this, &MainWindow::onFrequencyChanged);
 
     updateSystemInfo();
 
@@ -149,7 +154,10 @@ void MainWindow::setupUI() {
 
     leftLayout->addWidget(chartGroup, 1);  // 给图表区域分配更多空间
 
-    // 右侧：应用内存占用列表
+    // 右侧：垂直布局包含应用列表和自动清理设置
+    QVBoxLayout *rightLayout = new QVBoxLayout();
+
+    // 应用内存占用列表组
     QGroupBox *appListGroup = new QGroupBox("内存占用应用", this);
     appListLayout = new QVBoxLayout(appListGroup);
     appListGroup->setMinimumWidth(APP_LIST_MIN_WIDTH);  // 设置最小宽度
@@ -162,10 +170,46 @@ void MainWindow::setupUI() {
     }
 
     appListLayout->addStretch(); // 添加弹性空间以填充剩余区域
+    rightLayout->addWidget(appListGroup); // 将应用列表添加到右侧布局
+
+    // 自动清理设置组
+    autoCleanGroup = new QGroupBox("自动清理设置", this);
+    autoCleanGroup->setMinimumWidth(APP_LIST_MIN_WIDTH);  // 设置最小宽度
+    QVBoxLayout *autoCleanLayout = new QVBoxLayout(autoCleanGroup);
+
+    // 阈值设置
+    thresholdLabel = new QLabel("内存清理阈值:", autoCleanGroup);
+    thresholdSlider = new QSlider(Qt::Horizontal, autoCleanGroup);
+    thresholdSlider->setRange(10, 100); // 10% 到 100%
+    thresholdSlider->setValue(80); // 默认80%
+    thresholdValueLabel = new QLabel("80%", autoCleanGroup);
+    thresholdValueLabel->setAlignment(Qt::AlignRight);
+
+    QHBoxLayout *thresholdLayout = new QHBoxLayout();
+    thresholdLayout->addWidget(thresholdLabel);
+    thresholdLayout->addWidget(thresholdSlider);
+    thresholdLayout->addWidget(thresholdValueLabel);
+    autoCleanLayout->addLayout(thresholdLayout);
+
+    // 频率设置
+    frequencyLabel = new QLabel("清理频率 (秒):", autoCleanGroup);
+    frequencySlider = new QSlider(Qt::Horizontal, autoCleanGroup);
+    frequencySlider->setRange(1, 30); // 1秒到30秒
+    frequencySlider->setValue(1); // 默认1秒
+    frequencyValueLabel = new QLabel("1秒", autoCleanGroup);
+    frequencyValueLabel->setAlignment(Qt::AlignRight);
+
+    QHBoxLayout *frequencyLayout = new QHBoxLayout();
+    frequencyLayout->addWidget(frequencyLabel);
+    frequencyLayout->addWidget(frequencySlider);
+    frequencyLayout->addWidget(frequencyValueLabel);
+    autoCleanLayout->addLayout(frequencyLayout);
+
+    rightLayout->addWidget(autoCleanGroup); // 将自动清理设置添加到右侧布局
 
     // 将左右两部分添加到主布局
     mainLayout->addLayout(leftLayout, 1);  // 左侧占用1份空间
-    mainLayout->addWidget(appListGroup);   // 右侧应用列表占用固定宽度
+    mainLayout->addLayout(rightLayout);    // 右侧包含应用列表和设置组
 }
 
 void MainWindow::createChart() {
@@ -226,10 +270,20 @@ void MainWindow::createTrayIcon() {
 
         trayIcon = new QSystemTrayIcon(this);
         trayIcon->setContextMenu(trayMenu);
-        trayIcon->setIcon(QIcon(":/icons/icon.png"));
+        // 初始化时获取内存状态来设置适当的图标
+        auto memStatus = Buffer::GetMemoryStatus();
+        if (memStatus.memoryUsage < 40.0) {
+            trayIcon->setIcon(QIcon(":/icons/icon_cold.png"));
+        } else if (memStatus.memoryUsage < 70.0) {
+            trayIcon->setIcon(QIcon(":/icons/icon.png"));
+        } else if (memStatus.memoryUsage < 80.0) {
+            trayIcon->setIcon(QIcon(":/icons/icon_hot.png"));
+        } else {
+            trayIcon->setIcon(QIcon(":/icons/icon_red.png"));
+        }
         if (trayIcon->icon().isNull()) {
             // 尝试加载备用图标
-            trayIcon->setIcon(QIcon(":/icons/bitbug_favicon.ico"));
+            trayIcon->setIcon(QIcon(":/icons/icon.ico"));
             if (trayIcon->icon().isNull()) {
                 std::cout << "错误：图标加载失败！请检查资源文件路径。" << std::endl;
             } else {
@@ -308,7 +362,19 @@ void MainWindow::updateSystemInfo() {
                                  .arg(QString::number(memStatus.memoryUsage, 'f', 1)));
     memoryBar->setValue(static_cast<int>(memStatus.memoryUsage));
 
+    // 根据内存使用率更新托盘图标
     if (trayIcon) {
+        // 设置托盘图标根据内存使用率变化
+        if (memStatus.memoryUsage < 40.0) {
+            trayIcon->setIcon(QIcon(":/icons/icon_cold.png"));
+        } else if (memStatus.memoryUsage < 70.0) {
+            trayIcon->setIcon(QIcon(":/icons/icon.png"));
+        } else if (memStatus.memoryUsage < 80.0) {
+            trayIcon->setIcon(QIcon(":/icons/icon_hot.png"));
+        } else {
+            trayIcon->setIcon(QIcon(":/icons/icon_red.png"));
+        }
+
         trayIcon->setToolTip(QString("内存使用率: %1%").arg(memStatus.memoryUsage, 0, 'f', 1));
     }
 
@@ -347,16 +413,45 @@ void MainWindow::updateSystemInfo() {
         gpuLabel->setText("GPU: 未检测到");
     }
 
-    // 检查是否需要自动清理内存
+    // 检查是否需要自动清理内存（根据频率控制）
     if (memStatus.memoryUsage > Buffer::GetCleanThreshold()) {
-        bool result = Buffer::PerformMemoryClean();
-        if (trayIcon) {  // 检查 trayIcon 是否有效
-            if (result) {
-                trayIcon->showMessage("内存清理", "自动内存清理已完成！", QSystemTrayIcon::Information, CLEANUP_CHECK_INTERVAL);
-            } else {
-                trayIcon->showMessage("内存清理", "自动内存清理失败！", QSystemTrayIcon::Critical, CLEANUP_CHECK_INTERVAL);
+        // 获取当前设置的频率值
+        int currentFrequency = frequencySlider->value();
+        cleanFrequencyCounter++;
+        if (cleanFrequencyCounter >= currentFrequency) {  // 只在达到频率间隔时执行清理
+            // 在后台线程执行内存清理以避免UI卡顿
+            QFuture<bool> result = QtConcurrent::run([]() -> bool {
+                return Buffer::PerformMemoryClean();
+            });
+
+            // 显示清理中提示
+            if (trayIcon) {
+                trayIcon->showMessage("内存清理", "正在执行自动内存清理，请稍候...", QSystemTrayIcon::Information, CLEANUP_CHECK_INTERVAL);
             }
+
+            // 异步等待结果并更新UI
+            QTimer *timer = new QTimer(this);
+            timer->setSingleShot(true);
+            timer->setInterval(CLEANUP_CHECK_INTERVAL);  // 每秒检查一次清理是否完成
+            connect(timer, &QTimer::timeout, this, [this, timer, result]() mutable {
+                if (result.isFinished()) {
+                    bool success = result.result();
+                    if (trayIcon) {  // 检查 trayIcon 是否有效
+                        if (success) {
+                            trayIcon->showMessage("内存清理", "自动内存清理已完成！", QSystemTrayIcon::Information, CLEANUP_CHECK_INTERVAL);
+                        } else {
+                            trayIcon->showMessage("内存清理", "自动内存清理失败！", QSystemTrayIcon::Critical, CLEANUP_CHECK_INTERVAL);
+                        }
+                    }
+                    cleanFrequencyCounter = 0;  // 重置计数器
+                    timer->deleteLater();  // 清理定时器
+                }
+            });
+            timer->start();  // 启动定时器
         }
+    } else {
+        // 如果内存使用率低于阈值，重置计数器
+        cleanFrequencyCounter = 0;
     }
 
     // 应用列表更新由单独的定时器处理，这里不再更新
@@ -428,4 +523,17 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     } else {
         event->accept();
     }
+}
+
+// 处理阈值变化的槽函数
+void MainWindow::onThresholdChanged(int value) {
+    Buffer::SetCleanThreshold(value);
+    thresholdValueLabel->setText(QString("%1%").arg(value));
+}
+
+// 处理频率变化的槽函数
+void MainWindow::onFrequencyChanged(int value) {
+    // 更新计数器将由更新定时器控制
+    // 只更新显示的值
+    frequencyValueLabel->setText(QString("%1秒").arg(value));
 }
