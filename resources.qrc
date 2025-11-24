@@ -1,7 +1,10 @@
-<RCC>
-    <qresource prefix="/icons">
-        <file alias="icon.png">icons/icon.png</file>
-        <file alias="bitbug_favicon.ico">icons/bitbug_favicon.ico</file>
-        <!-- 将来可以在这里添加更多图标 -->
-    </qresource>
+<RCC>
+    <qresource prefix="/icons">
+        <file alias="icon.png">icons/icon.png</file>
+        <file alias="icon_cold.png">icons/icon_cold.png</file>
+        <file alias="icon_hot.png">icons/icon_hot.png</file>
+        <file alias="icon_red.png">icons/icon_red.png</file>
+        <file alias="icon.ico">icons/icon.ico</file>
+        <!-- 添加icon -->
+    </qresource>
 </RCC>
